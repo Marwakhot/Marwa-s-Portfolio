@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marwa's Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --desktop-bg: #ffffff;
+    --taskbar: #ffffff;
+    --window-bg: #ffffff;
+    --window-header: #f8fffe;
+    --accent1: #00C2A8;
+    --accent2: #F5A623;
+    --accent3: #FFD060;
+    --accent4: #4ADE80;
+    --text: #0a1a18;
+    --text-dim: #4a7a72;
+    --border: rgba(0,194,168,0.2);
+    --glass: rgba(0,194,168,0.04);
+    --shadow: 0 8px 40px rgba(0,0,0,0.1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 500;
+    background: var(--bg);
+    height: 100vh; width: 100vw;
+    overflow: hidden;
+    color: var(--text);
+  }
+
+  /* ── BOOT ── */
+  #boot {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+    animation: bootFade 0.5s ease 1.8s forwards;
+  }
+  @keyframes bootFade { to { opacity:0; pointer-events:none; } }
+  .boot-logo { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 700; color: var(--accent1); letter-spacing: 4px; }
+  .boot-bar-wrap { width: 200px; height: 3px; background: rgba(0,194,168,0.15); border-radius: 2px; overflow: hidden; }
+  .boot-bar { height: 100%; background: var(--accent1); border-radius: 2px; animation: bootBar 1.6s ease forwards; }
+  @keyframes bootBar { from { width: 0; } to { width: 100%; } }
+
+  /* ── DESKTOP ── */
+  #desktop {
+    position: relative; width: 100vw; height: 100vh;
+    background: var(--desktop-bg);
+    overflow: hidden;
+  }
+
+  /* Grid background */
+  #desktop::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,194,168,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,194,168,0.08) 1px, transparent 1px);
+    background-size: 14px 14px, 14px 14px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── ICONS ── */
+  .icon-grid {
+    position: absolute; left: 28px; top: 28px;
+    display: flex; flex-direction: column; gap: 10px;
+    z-index: 10;
+  }
+  .desktop-icon {
+    display: flex; flex-direction: column; align-items: center; gap: 7px;
+    width: 76px; cursor: pointer; padding: 7px 4px 6px;
+    border-radius: 10px; transition: all 0.15s;
+    border: 1.5px solid transparent;
+    background: none; outline: none;
+    position: relative; z-index: 10;
+  }
+  .desktop-icon:hover { background: rgba(0,194,168,0.08); border-color: var(--border); }
+  .desktop-icon:active { transform: scale(0.95); }
+  .icon-img {
+    width: 52px; height: 52px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; pointer-events: none;
+  }
+  .icon-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px; font-weight: 700;
+    color: #0a1a18; text-align: center;
+    line-height: 1.3; word-break: break-word;
+    pointer-events: none;
+  }
+
+  /* ── WINDOWS ── */
+  .window {
+    position: absolute;
+    background: var(--window-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    min-width: 0; min-height: 300px;
+    transition: box-shadow 0.2s;
+  }
+  .window.focused { box-shadow: 0 16px 60px rgba(0,0,0,0.18); }
+
+  .window-titlebar {
+    background: var(--window-header);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: move; user-select: none; flex-shrink: 0;
+    height: 42px;
+  }
+  .traffic-lights { display: flex; gap: 7px; flex-shrink: 0; }
+  .tl { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+  .tl-red   { background: #ff5f57; }
+  .tl-yellow{ background: #febc2e; }
+  .tl-green { background: #28c840; }
+  .window-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; font-weight: 500;
+    color: var(--text-dim); letter-spacing: 0.5px;
+    flex: 1; text-align: center;
+  }
+  .window-body {
+    flex: 1; overflow-y: auto;
+    padding: 20px; min-height: 0;
+  }
+  .resize-handle { height: 6px; cursor: s-resize; flex-shrink: 0; }
+
+  /* Window sizes */
+  #win-about      { width: min(680px, calc(100vw - 130px)); top: 50px; left: 110px; }
+  #win-projects   { width: min(860px, calc(100vw - 130px)); height: 560px; top: 70px; left: 110px; }
+  #win-hackathons { width: min(820px, calc(100vw - 130px)); height: 520px; top: 80px; left: 110px; }
+  #win-experience { width: min(820px, calc(100vw - 130px)); top: 80px; left: 110px; }
+
+  /* ── ABOUT ── */
+  .about-photo {
+    width: 120px; height: 120px; border-radius: 12px;
+    border: 2px dashed rgba(0,194,168,0.4);
+    background: rgba(0,194,168,0.04);
+    overflow: hidden; flex-shrink: 0;
+  }
+  .about-name {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
+    color: var(--text); margin-bottom: 6px;
+  }
+  .about-name span { color: var(--accent2); }
+  .about-tagline {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; color: var(--accent1); font-weight: 500;
+    margin-bottom: 0;
+  }
+  .about-desc {
+    font-size: 13.5px; line-height: 1.8;
+    color: var(--text); font-weight: 600;
+    margin-bottom: 0;
+  }
+  .contact-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .contact-chip {
+    padding: 6px 14px; border-radius: 20px;
+    border: 1px solid var(--border);
+    font-size: 12px; font-weight: 600;
+    background: rgba(0,194,168,0.04);
+    color: var(--text);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .contact-chip:hover { background: rgba(0,194,168,0.1); border-color: var(--accent1); }
+  .status-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-top: 16px;
+  }
+  .status-card {
+    padding: 12px; border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(0,194,168,0.03);
+  }
+  .status-label { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .status-val { font-size: 13px; font-weight: 700; color: var(--text); }
+  .status-val.teal { color: var(--accent1); }
+  .status-val.orange { color: var(--accent2); }
+
+  /* ── PROJ/EXP TIMELINE LAYOUT ── */
+  .exp-timeline-sidebar {
+    width: 210px; flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    padding: 16px 12px; overflow-y: auto;
+    background: rgba(0,194,168,0.02);
+  }
+  .tl-section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent1); margin-bottom: 10px; padding-left: 4px;
+  }
+  .tl-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px;
+    cursor: pointer; transition: all 0.18s; margin-bottom: 4px;
+    border: 1px solid transparent;
+  }
+  .tl-item:hover { background: rgba(0,194,168,0.06); border-color: var(--border); }
+  .tl-item.active { background: rgba(0,194,168,0.08); border-color: rgba(0,194,168,0.25); }
+  .tl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .tl-item-text { flex: 1; min-width: 0; }
+  .tl-item-role { font-size: 11px; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .tl-item-where { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-dim); margin-top: 1px; font-weight: 600; }
+
+  .exp-detail-panel { flex: 1; padding: 24px 28px; overflow-y: auto; }
+  .exp-detail { animation: fadeInDetail 0.25s ease; }
+  @keyframes fadeInDetail { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  .exp-detail-icon {
+    width: 36px; height: 4px; border-radius: 4px;
+    border: none !important; margin-bottom: 16px;
+  }
+  .exp-detail-role { font-size: 22px; font-weight: 800; letter-spacing: -0.3px; color: var(--text); margin-bottom: 5px; }
+  .exp-detail-where { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 600; color: var(--accent1); margin-bottom: 16px; }
+  .exp-detail-desc { font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.8; }
+
+  .features-list { padding-left: 18px; margin-top: 10px; }
+  .features-list li { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.8; margin-bottom: 4px; }
+
+  /* ── PROJECT DETAIL ── */
+  .proj-detail-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 8px; font-weight: 600;
+  }
+  .proj-ps-row { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  .proj-ps-block { padding: 16px 20px; border-radius: 10px; border-left: 4px solid; }
+  .proj-ps-block.problem { background: rgba(255,80,80,0.07); border-color: rgba(255,80,80,0.6); }
+  .proj-ps-block.solution { background: rgba(0,194,168,0.07); border-color: rgba(0,194,168,0.6); }
+  .proj-ps-label {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 2.5px; text-transform: uppercase; font-weight: 700; margin-bottom: 8px;
+  }
+  .proj-ps-block.problem .proj-ps-label { color: rgba(220,50,50,0.9); }
+  .proj-ps-block.solution .proj-ps-label { color: var(--accent1); }
+  .proj-ps-text { font-size: 13.5px; color: var(--text); font-weight: 600; line-height: 1.7; }
+
+  /* ── CHIPS ── */
+  .tech-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 4px 10px; border-radius: 6px;
+    background: rgba(0,194,168,0.08);
+    border: 1px solid rgba(0,194,168,0.2);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; font-weight: 600; color: var(--text);
+  }
+
+  /* ── GITHUB BTN ── */
+  .proj-gh-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px;
+    background: rgba(0,194,168,0.08);
+    border: 1px solid rgba(0,194,168,0.3);
+    color: var(--accent1); font-size: 12px; font-weight: 700;
+    text-decoration: none; transition: all 0.15s;
+  }
+  .proj-gh-btn:hover { background: rgba(0,194,168,0.15); }
+  .proj-gh-btn.blue {
+    background: rgba(99,102,241,0.08);
+    border-color: rgba(99,102,241,0.3);
+    color: #6366f1;
+  }
+  .proj-gh-btn.blue:hover { background: rgba(99,102,241,0.15); }
+
+  /* ── HACKATHONS ── */
+  .hack-badge {
+    display: inline-block; padding: 4px 12px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .hack-badge.gold { background: rgba(245,166,35,0.12); color: var(--accent2); border: 1px solid rgba(245,166,35,0.3); }
+  .hack-badge.purple { background: rgba(124,58,237,0.1); color: #7c3aed; border: 1px solid rgba(124,58,237,0.25); }
+
+  /* ── TASKBAR ── */
+  #taskbar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 42px;
+    background: var(--taskbar);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 16px; z-index: 1000;
+  }
+  .taskbar-logo {
+    font-family: 'DM Mono', monospace; font-size: 13px;
+    font-weight: 700; color: var(--accent1);
+    padding: 4px 12px; border-radius: 8px;
+    background: rgba(0,194,168,0.08);
+    letter-spacing: 1px; margin-right: 6px;
+  }
+  .taskbar-btn {
+    padding: 4px 12px; border-radius: 8px;
+    border: 1px solid transparent;
+    background: none; cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px; font-weight: 700; color: var(--text);
+    transition: all 0.15s; display: flex; align-items: center; gap: 6px;
+  }
+  .taskbar-btn::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+  .taskbar-btn:hover { background: rgba(0,194,168,0.06); border-color: var(--border); }
+  .taskbar-btn.active { background: rgba(0,194,168,0.1); border-color: rgba(0,194,168,0.3); }
+  .taskbar-btn.active::before { background: var(--accent1); }
+  #clock {
+    margin-left: auto; font-family: 'DM Mono', monospace;
+    font-size: 12px; font-weight: 600; color: var(--text-dim);
+  }
+
+  /* Force all detail text bold */
+  .exp-detail-desc, .features-list li, .exp-detail-role, .exp-detail-where,
+  .proj-ps-text, .tl-item-role, .tl-item-where { font-weight: 600 !important; }
+  .exp-detail-role { font-weight: 800 !important; }
+
+  /* Architecture diagram */
+  .arch-box {
+    margin-top: 18px;
+    background: rgba(0,194,168,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-family: 'DM Mono', monospace;
+  }
+  .arch-title {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent1); font-weight: 700; margin-bottom: 14px;
+  }
+  .arch-row {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 2px;
+  }
+  .arch-node {
+    background: var(--window-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 11px; font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .arch-node.teal { border-color: var(--accent1); background: rgba(0,194,168,0.07); color: var(--accent1); }
+  .arch-node.amber { border-color: var(--accent2); background: rgba(245,166,35,0.07); color: var(--accent2); }
+  .arch-node.purple { border-color: #7c3aed; background: rgba(124,58,237,0.07); color: #7c3aed; }
+  .arch-arrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px; color: var(--text-dim);
+    padding: 0 6px; font-weight: 700;
+  }
+  .arch-down {
+    font-size: 13px; color: var(--text-dim);
+    padding-left: 20px; margin-bottom: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+  .arch-sub {
+    padding-left: 32px; margin-bottom: 2px;
+  }
+  .arch-sub .arch-node {
+    font-size: 10px; padding: 3px 10px;
+  }
+  .arch-bullet {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; color: var(--text-dim);
+    padding-left: 32px; margin-bottom: 2px; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <div class="boot-logo">M.OS</div>
+  <div class="boot-bar-wrap"><div class="boot-bar"></div></div>
+</div>
+
+<div id="desktop">
+
+  <!-- Desktop Icons -->
+  <div class="icon-grid">
+    <button class="desktop-icon" onclick="openWindow('win-about')">
+      <span style="font-size:44px;line-height:1;display:block;pointer-events:none">📂</span>
+      <span class="icon-label">About.me</span>
+    </button>
+    <button class="desktop-icon" onclick="openWindow('win-projects')">
+      <span style="font-size:44px;line-height:1;display:block;pointer-events:none">📂</span>
+      <span class="icon-label">Projects</span>
+    </button>
+    <button class="desktop-icon" onclick="openWindow('win-hackathons')">
+      <span style="font-size:44px;line-height:1;display:block;pointer-events:none">📂</span>
+      <span class="icon-label">Wins</span>
+    </button>
+    <button class="desktop-icon" onclick="openWindow('win-experience')">
+      <span style="font-size:44px;line-height:1;display:block;pointer-events:none">📂</span>
+      <span class="icon-label">Experience</span>
+    </button>
+  </div>
+
+  <!-- ABOUT WINDOW -->
+  <div class="window" id="win-about">
+    <div class="window-titlebar" onmousedown="startDrag(event,'win-about')">
+      <div class="traffic-lights">
+        <div class="tl tl-red" onclick="closeWindow('win-about')"></div>
+        <div class="tl tl-yellow"></div><div class="tl tl-green"></div>
+      </div>
+      <div class="window-title">about.me — Marwa</div>
+    </div>
+    <div class="window-body">
+      <div style="display:flex;gap:24px;align-items:center;margin-bottom:12px;">
+        <div class="about-photo">
+          <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(0,194,168,0.5);">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            <span style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(0,194,168,0.6);letter-spacing:1px;">your photo</span>
+          </div>
+        </div>
+        <div style="flex:1;">
+          <div class="about-name">Hi I'm <span>Marwa</span></div>
+          <div class="about-tagline">// CS Student · AI &amp; Big Data · Dubai, UAE</div>
+        </div>
+      </div>
+      <div class="about-desc">
+        I could write a long "About Me," but honestly the projects below say it better.
+        I build AI-powered platforms, dig into machine learning, and analyze data that matters —
+        all while completing my CS degree at UOW Dubai.
+      </div>
+      <div class="contact-row" style="margin-top:14px;">
+        <div class="contact-chip"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cca1adbebbada7a4a3b8fcfcfb8caba1ada5a0e2afa3a1">[email&#160;protected]</a></div>
+        <div class="contact-chip">+971 58 588 5323</div>
+        <a href="https://www.linkedin.com/in/marwa-khot-238482353/" target="_blank" class="contact-chip" style="text-decoration:none">LinkedIn</a>
+        <a href="https://github.com/Marwakhot" target="_blank" class="contact-chip" style="text-decoration:none">GitHub</a>
+      </div>
+      <div class="status-row">
+        <div class="status-card">
+          <div class="status-label">Current Role</div>
+          <div class="status-val orange">Data Science Intern @ Alamar</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">Education</div>
+          <div class="status-val teal">CS Student @ UOW Dubai</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">Location</div>
+          <div class="status-val">Dubai, UAE</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">Focus</div>
+          <div class="status-val">AI · ML · Big Data</div>
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
+  <!-- PROJECTS WINDOW -->
+  <div class="window" id="win-projects">
+    <div class="window-titlebar" onmousedown="startDrag(event,'win-projects')">
+      <div class="traffic-lights">
+        <div class="tl tl-red" onclick="closeWindow('win-projects')"></div>
+        <div class="tl tl-yellow"></div><div class="tl tl-green"></div>
+      </div>
+      <div class="window-title">projects — click to explore</div>
+    </div>
+    <div class="window-body" style="padding:0;display:flex;height:100%;overflow:hidden;">
+      <div class="exp-timeline-sidebar">
+        <div class="tl-section-label">// AI SYSTEMS</div>
+        <div class="tl-item active" onclick="showProj('proj-orion',this)">
+          <div class="tl-dot" style="background:rgba(0,194,168,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">ORION Talent AI</div><div class="tl-item-where">HR & Onboarding</div></div>
+        </div>
+        <div class="tl-item" onclick="showProj('proj-brew',this)">
+          <div class="tl-dot" style="background:rgba(0,194,168,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">BrainBrew AI</div><div class="tl-item-where">Learning Platform</div></div>
+        </div>
+        <div class="tl-item" onclick="showProj('proj-robot',this)">
+          <div class="tl-dot" style="background:rgba(0,194,168,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">NeuroNav</div><div class="tl-item-where">Robot Navigation AI</div></div>
+        </div>
+        <div class="tl-section-label" style="margin-top:16px">// MACHINE LEARNING / NLP</div>
+        <div class="tl-item" onclick="showProj('proj-bug',this)">
+          <div class="tl-dot" style="background:rgba(245,166,35,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">AutoBug</div><div class="tl-item-where">Bug Triage System</div></div>
+        </div>
+        <div class="tl-item" onclick="showProj('proj-risk',this)">
+          <div class="tl-dot" style="background:rgba(245,166,35,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">LoanGuard</div><div class="tl-item-where">Risk Management Audit</div></div>
+        </div>
+        <div class="tl-item" onclick="showProj('proj-var',this)">
+          <div class="tl-dot" style="background:rgba(245,166,35,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">QuantRisk VaR</div><div class="tl-item-where">Portfolio Risk</div></div>
+        </div>
+      </div>
+      <div class="exp-detail-panel">
+        <div class="exp-detail" id="proj-brew" style="display:none">
+          <div class="proj-detail-num" style="color:var(--accent1)">01 — AI SYSTEMS</div>
+          <div class="exp-detail-role">BrainBrew AI</div>
+          <a href="https://github.com/Marwakhot/BrainBrew" target="_blank" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent1);text-decoration:none;font-weight:600;letter-spacing:0.5px;display:inline-block;margin-bottom:2px;">github.com/Marwakhot/BrainBrew</a>
+          <div class="proj-ps-row">
+            <div class="proj-ps-block problem"><div class="proj-ps-label">PROBLEM</div><div class="proj-ps-text">Passive PDF learning not engaging students in critical thinking.</div></div>
+            <div class="proj-ps-block solution"><div class="proj-ps-label">SOLUTION</div><div class="proj-ps-text">AI-powered platform using NLP to generate adaptive questions and difficulty levels that promote deeper understanding.</div></div>
+          </div>
+          <div class="tech-chips" style="margin-top:14px"><span class="chip">React</span><span class="chip">TypeScript</span><span class="chip">AI/ML</span><span class="chip">NLP</span><span class="chip">Supabase</span><span class="chip">PostgreSQL</span><span class="chip">Three.js</span></div>
+          
+          <div class="arch-box">
+            <div class="arch-title">// ARCHITECTURE</div>
+            <div class="arch-row"><div class="arch-node teal">User uploads PDF</div></div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node">React + Three.js Frontend</div></div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node amber">NLP Engine</div></div>
+            <div class="arch-bullet">• Text extraction & chunking</div>
+            <div class="arch-bullet">• Adaptive question generation</div>
+            <div class="arch-bullet">• Difficulty level scoring</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node">Supabase + PostgreSQL</div></div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node teal">Interactive Q&amp;A Session</div></div>
+          </div>
+        </div>
+        <div class="exp-detail" id="proj-orion">
+          <div class="proj-detail-num" style="color:var(--accent1)">02 — AI SYSTEMS</div>
+          <div class="exp-detail-role">ORION Talent AI</div>
+          <a href="https://github.com/Marwakhot/Orion" target="_blank" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent1);text-decoration:none;font-weight:600;letter-spacing:0.5px;display:inline-block;margin-bottom:2px;">github.com/Marwakhot/Orion</a>
+          <div class="proj-ps-row">
+            <div class="proj-ps-block problem"><div class="proj-ps-label">PROBLEM</div><div class="proj-ps-text">Manual hiring processes are slow, biased, and lack structured onboarding for new employees.</div></div>
+            <div class="proj-ps-block solution"><div class="proj-ps-label">SOLUTION</div><div class="proj-ps-text">End-to-end HR platform with AI CV matching, behavioral assessments, conversational chatbot using LangChain & RAG, and automated onboarding workflows.</div></div>
+          </div>
+          <div class="tech-chips" style="margin-top:14px"><span class="chip">React</span><span class="chip">TypeScript</span><span class="chip">Node.js</span><span class="chip">LangChain</span><span class="chip">RAG</span><span class="chip">AI/ML</span><span class="chip">PostgreSQL</span></div>
+          
+          <div class="arch-box">
+            <div class="arch-title">// ARCHITECTURE</div>
+            <div class="arch-row"><div class="arch-node teal">Recruiter</div><div class="arch-arrow">+</div><div class="arch-node teal">Candidate</div></div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node">React + TypeScript Frontend</div></div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node">Node.js REST API</div></div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node amber">AI Layer</div></div>
+            <div class="arch-bullet">• CV parsing &rarr; skill matching</div>
+            <div class="arch-bullet">• LangChain + RAG chatbot</div>
+            <div class="arch-bullet">• Behavioral voice/text assessment</div>
+            <div class="arch-bullet">• Composite scoring engine</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node">PostgreSQL + pgvector</div></div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node teal">Shortlist &rarr; Onboarding &rarr; Day One Plan</div></div>
+          </div>
+        </div>
+        <div class="exp-detail" id="proj-bug" style="display:none">
+          <div class="proj-detail-num" style="color:var(--accent2)">02 — MACHINE LEARNING / NLP</div>
+          <div class="exp-detail-role">AutoBug — Bug Triage System</div>
+          <a href="https://github.com/Marwakhot/bug-triage-nlp-api" target="_blank" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent1);text-decoration:none;font-weight:600;letter-spacing:0.5px;display:inline-block;margin-bottom:2px;">github.com/Marwakhot/bug-triage-nlp-api</a>
+          <div class="proj-ps-row">
+            <div class="proj-ps-block problem"><div class="proj-ps-label">PROBLEM</div><div class="proj-ps-text">Slow bug assignment causing delays in development cycles and inefficient resource allocation.</div></div>
+            <div class="proj-ps-block solution"><div class="proj-ps-label">SOLUTION</div><div class="proj-ps-text">NLP + ML system to automatically predict the responsible team and priority for each bug report, with bulk predictions via a Streamlit dashboard.</div></div>
+          </div>
+          <div class="tech-chips" style="margin-top:14px"><span class="chip">Python</span><span class="chip">NLP (TF-IDF)</span><span class="chip">LightGBM</span><span class="chip">Flask API</span><span class="chip">Streamlit</span><span class="chip">Docker</span></div>
+          
+          <div class="arch-box">
+            <div class="arch-title">// ARCHITECTURE</div>
+            <div class="arch-row"><div class="arch-node teal">Bug Report Input</div></div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node amber">NLP Pipeline</div></div>
+            <div class="arch-bullet">• TF-IDF vectorization</div>
+            <div class="arch-bullet">• Text preprocessing</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node">LightGBM Classifier</div></div>
+            <div class="arch-bullet">• Team prediction</div>
+            <div class="arch-bullet">• Priority prediction</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node">Flask API</div><div class="arch-arrow">+</div><div class="arch-node">Streamlit Dashboard</div></div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node purple">Docker Container</div></div>
+          </div>
+        </div>
+        <div class="exp-detail" id="proj-robot" style="display:none">
+          <div class="proj-detail-num" style="color:var(--accent2)">01 — MACHINE LEARNING / NLP</div>
+          <div class="exp-detail-role">NeuroNav — Robot Navigation AI</div>
+          <a href="https://github.com/Marwakhot/Gazebo_robot_navigation" target="_blank" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent1);text-decoration:none;font-weight:600;letter-spacing:0.5px;display:inline-block;margin-bottom:2px;">github.com/Marwakhot/Gazebo_robot_navigation</a>
+          <div class="proj-ps-row">
+            <div class="proj-ps-block problem"><div class="proj-ps-label">PROBLEM</div><div class="proj-ps-text">Autonomous navigation challenges in complex environments with dynamic obstacles.</div></div>
+            <div class="proj-ps-block solution"><div class="proj-ps-label">SOLUTION</div><div class="proj-ps-text">Implemented Fuzzy Logic, Behavior Trees, and Q-Learning for obstacle avoidance in a 10m x 10m simulated arena.</div></div>
+          </div>
+          <div class="tech-chips" style="margin-top:14px"><span class="chip">Python</span><span class="chip">Fuzzy Logic</span><span class="chip">Behavior Trees</span><span class="chip">Reinforcement Learning</span></div>
+          
+          <div class="arch-box">
+            <div class="arch-title">// ARCHITECTURE</div>
+            <div class="arch-row"><div class="arch-node teal">Gazebo Simulation Environment</div></div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node amber">Sensor Input</div></div>
+            <div class="arch-bullet">• Obstacle detection</div>
+            <div class="arch-bullet">• Position mapping</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node">Decision Engine</div></div>
+            <div class="arch-bullet">• Fuzzy Logic controller</div>
+            <div class="arch-bullet">• Behavior Trees</div>
+            <div class="arch-bullet">• Q-Learning (RL)</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node teal">Robot Actions &rarr; 10m x 10m Arena</div></div>
+          </div>
+        </div>
+        <div class="exp-detail" id="proj-risk" style="display:none">
+          <div class="proj-detail-num" style="color:var(--accent2)">04 — MACHINE LEARNING / NLP</div>
+          <div class="exp-detail-role">LoanGuard — AI Risk Management Audit</div>
+          <a href="https://github.com/Marwakhot/-AI-Risk-Management-Audit" target="_blank" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent1);text-decoration:none;font-weight:600;letter-spacing:0.5px;display:inline-block;margin-bottom:2px;">github.com/Marwakhot/-AI-Risk-Management-Audit</a>
+
+          <div class="proj-ps-row">
+            <div class="proj-ps-block problem"><div class="proj-ps-label">PROBLEM</div><div class="proj-ps-text">AI loan-approval systems contain hidden biases and security vulnerabilities — violating fairness standards and exposing institutions to legal and ethical risk.</div></div>
+            <div class="proj-ps-block solution"><div class="proj-ps-label">SOLUTION</div><div class="proj-ps-text">A comprehensive fairness and security audit using the NIST AI RMF. Quantified gender & age bias via the 80% Rule, uncovered a 20% manipulation success rate on the age field, and produced a prioritized risk roadmap.</div></div>
+          </div>
+          <div class="tech-chips" style="margin-top:14px"><span class="chip">Python</span><span class="chip">Scikit-learn</span><span class="chip">Fairlearn</span><span class="chip">Pandas</span><span class="chip">Matplotlib</span><span class="chip">NIST AI RMF</span><span class="chip">Jupyter</span></div>
+          
+          <div class="arch-box">
+            <div class="arch-title">// ARCHITECTURE</div>
+            <div class="arch-row"><div class="arch-node teal">Loan Application Data</div></div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node amber">NIST AI RMF Framework</div></div>
+            <div class="arch-bullet">• GOVERN: scope & objectives</div>
+            <div class="arch-bullet">• MAP: risk identification</div>
+            <div class="arch-bullet">• MEASURE: quantify bias</div>
+            <div class="arch-bullet">• MANAGE: recommendations</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node">Fairlearn + Scikit-learn</div></div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node teal">Audit Report + Visualizations</div></div>
+          </div>
+        </div>
+        <div class="exp-detail" id="proj-var" style="display:none">
+          <div class="proj-detail-num" style="color:var(--accent2)">05 — MACHINE LEARNING / NLP</div>
+          <div class="exp-detail-role">QuantRisk — VaR Validation & Capital Allocation</div>
+          <a href="https://github.com/Marwakhot/QuantRisk-VaR-Validation" target="_blank" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent1);text-decoration:none;font-weight:600;letter-spacing:0.5px;display:inline-block;margin-bottom:2px;">github.com/Marwakhot/QuantRisk-VaR-Validation</a>
+          <div class="exp-detail-where"><a href="https://github.com/Marwakhot/QuantRisk-VaR-Validation" target="_blank" style="color:var(--accent1);text-decoration:none;">github.com/Marwakhot/QuantRisk-VaR-Validation</a>
+          <div class="arch-box">
+            <div class="arch-title">// ARCHITECTURE</div>
+            <div class="arch-row"><div class="arch-node teal">yfinance &rarr; 3yr Historical Prices</div></div>
+            <div class="arch-bullet">• AAPL, MSFT, JPM, GLD, SPY</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node">01 — Data Setup</div></div>
+            <div class="arch-bullet">• Normality tests (Jarque-Bera, Shapiro-Wilk)</div>
+            <div class="arch-bullet">• Correlation mapping</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node amber">02 — VaR Calculation (3 Models)</div></div>
+            <div class="arch-bullet">• Historical Simulation</div>
+            <div class="arch-bullet">• Variance-Covariance (Parametric)</div>
+            <div class="arch-bullet">• Monte Carlo (10,000 scenarios)</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node">03 — Backtesting</div></div>
+            <div class="arch-bullet">• 70/30 train-test split</div>
+            <div class="arch-bullet">• Kupiec's POF statistical test</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node teal">Capital Reserve = $21,578 @ 99% confidence</div></div>
+          </div></div>
+          <div class="proj-ps-row">
+            <div class="proj-ps-block problem"><div class="proj-ps-label">PROBLEM</div><div class="proj-ps-text">Investment portfolios lack statistically validated risk quantification — making it impossible to set accurate capital reserves or meet Basel III regulatory requirements.</div></div>
+            <div class="proj-ps-block solution"><div class="proj-ps-label">SOLUTION</div><div class="proj-ps-text">Built a three-model VaR framework (Historical Simulation, Variance-Covariance, Monte Carlo) with Kupiec's POF backtesting. All models achieved 100% validation, recommending a $21,578 daily capital reserve at 99% confidence.</div></div>
+          </div>
+
+          <div class="arch-box">
+            <div class="arch-title">// ARCHITECTURE</div>
+            <div class="arch-row"><div class="arch-node teal">yfinance &rarr; 3yr Historical Prices</div></div>
+            <div class="arch-bullet">• AAPL, MSFT, JPM, GLD, SPY</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node">01 — Data Setup</div></div>
+            <div class="arch-bullet">• Normality tests (Jarque-Bera, Shapiro-Wilk)</div>
+            <div class="arch-bullet">• Correlation mapping</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node amber">02 — VaR Calculation (3 Models)</div></div>
+            <div class="arch-bullet">• Historical Simulation</div>
+            <div class="arch-bullet">• Variance-Covariance (Parametric)</div>
+            <div class="arch-bullet">• Monte Carlo (10,000 scenarios)</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node">03 — Backtesting</div></div>
+            <div class="arch-bullet">• 70/30 train-test split</div>
+            <div class="arch-bullet">• Kupiec's POF statistical test</div>
+            <div class="arch-down">&#8595;</div>
+            <div class="arch-row"><div class="arch-node teal">Capital Reserve = $21,578 @ 99% confidence</div></div>
+          </div></div>
+          <div class="proj-ps-row">
+            <div class="proj-ps-block problem"><div class="proj-ps-label">PROBLEM</div><div class="proj-ps-text">Investment portfolios lack statistically validated risk quantification — making it impossible to set accurate capital reserves or meet Basel III regulatory requirements.</div></div>
+            <div class="proj-ps-block solution"><div class="proj-ps-label">SOLUTION</div><div class="proj-ps-text">Built a three-model VaR framework (Historical Simulation, Variance-Covariance, Monte Carlo) with Kupiec's POF backtesting. All models achieved 100% validation, recommending a $21,578 daily capital reserve at 99% confidence.</div></div>
+          </div>
+          <div class="tech-chips" style="margin-top:14px"><span class="chip">Python</span><span class="chip">Pandas</span><span class="chip">NumPy</span><span class="chip">SciPy</span><span class="chip">Monte Carlo</span><span class="chip">yfinance</span><span class="chip">Basel III</span><span class="chip">Jupyter</span></div>
+          
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
+  <!-- WINS WINDOW -->
+  <div class="window" id="win-hackathons">
+    <div class="window-titlebar" onmousedown="startDrag(event,'win-hackathons')">
+      <div class="traffic-lights">
+        <div class="tl tl-red" onclick="closeWindow('win-hackathons')"></div>
+        <div class="tl tl-yellow"></div><div class="tl tl-green"></div>
+      </div>
+      <div class="window-title">hackathon wins — click to explore</div>
+    </div>
+    <div class="window-body" style="padding:0;display:flex;height:100%;overflow:hidden;">
+      <div class="exp-timeline-sidebar">
+        <div class="tl-section-label">// WINS</div>
+        <div class="tl-item active" onclick="showWin('win-orion',this)">
+          <div class="tl-dot" style="background:rgba(245,166,35,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">Space42 Bounty</div><div class="tl-item-where">3rd Place · Nov 2024</div></div>
+        </div>
+        <div class="tl-item" onclick="showWin('win-brew',this)">
+          <div class="tl-dot" style="background:rgba(124,58,237,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">BITS Pilani Hackathon</div><div class="tl-item-where">2024</div></div>
+        </div>
+      </div>
+      <div class="exp-detail-panel">
+        <div class="exp-detail" id="win-orion">
+          <div class="exp-detail-icon" style="background:rgba(245,166,35,0.9)"></div>
+          <div class="exp-detail-role">Space42 Bounty Challenge — 3rd Place</div>
+          <div class="exp-detail-where">Google Developers Group · Univ. of Birmingham Dubai · Nov 2024</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">ORION — AI-Powered Talent & Onboarding Partner</div>
+          <div class="exp-detail-desc">Won 3rd place building ORION in a single weekend — an end-to-end HR platform with AI-powered CV matching, behavioral assessments, and automated onboarding workflows.</div>
+          <ul class="features-list" style="margin-top:12px">
+            <li>CV upload with instant eligibility matching against job skills</li>
+            <li>Behavioral AI assessment through voice or text</li>
+            <li>Combined scoring system for smart candidate shortlisting</li>
+            <li>Conversational AI chatbot powered by LangChain and RAG</li>
+            <li>Employee zone unlock with structured Day One plan</li>
+          </ul>
+          <div class="tech-chips" style="margin-top:14px"><span class="chip">React</span><span class="chip">TypeScript</span><span class="chip">Node.js</span><span class="chip">LangChain</span><span class="chip">RAG</span><span class="chip">AI/ML</span></div>
+          <div style="margin-top:18px;width:100%;height:160px;border-radius:10px;border:2px dashed rgba(0,194,168,0.4);background:rgba(0,194,168,0.03);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(0,194,168,0.5)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(0,194,168,0.5);letter-spacing:1px;">add your photo here</span>
+          </div>
+        </div>
+        <div class="exp-detail" id="win-brew" style="display:none">
+          <div class="exp-detail-icon" style="background:rgba(124,58,237,0.9)"></div>
+          <div class="exp-detail-role">BITS Pilani Hackathon</div>
+          <div class="exp-detail-where">BITS Pilani Dubai Campus · 2024</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">Brain Brew — AI-Powered Learning Platform</div>
+          <div class="exp-detail-desc">Built Brain Brew — an innovative AI-powered platform that transforms passive PDF learning into an engaging, interactive experience using adaptive difficulty and NLP.</div>
+          <ul class="features-list" style="margin-top:12px">
+            <li>AI asks thought-provoking questions instead of giving direct answers</li>
+            <li>4 adaptive difficulty levels to match learner progress</li>
+            <li>Interactive experience that promotes critical thinking</li>
+            <li>Beautiful 3D interface with Three.js for immersive learning</li>
+          </ul>
+          <div class="tech-chips" style="margin-top:14px"><span class="chip">React</span><span class="chip">TypeScript</span><span class="chip">Supabase</span><span class="chip">PostgreSQL</span><span class="chip">Three.js</span><span class="chip">Tailwind CSS</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
+  <!-- EXPERIENCE WINDOW -->
+  <div class="window" id="win-experience">
+    <div class="window-titlebar" onmousedown="startDrag(event,'win-experience')">
+      <div class="traffic-lights">
+        <div class="tl tl-red" onclick="closeWindow('win-experience')"></div>
+        <div class="tl tl-yellow"></div><div class="tl tl-green"></div>
+      </div>
+      <div class="window-title">experience & achievements — click to explore</div>
+    </div>
+    <div class="window-body" style="padding:0;display:flex;height:100%;overflow:hidden;">
+      <div class="exp-timeline-sidebar">
+        <div class="tl-section-label">// CURRENT</div>
+        <div class="tl-item active" onclick="showExp('exp-intern',this)">
+          <div class="tl-dot" style="background:rgba(245,166,35,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">Data Science Intern</div><div class="tl-item-where">Alamar</div></div>
+        </div>
+        <div class="tl-item" onclick="showExp('exp-student',this)">
+          <div class="tl-dot" style="background:rgba(0,194,168,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">CS Student</div><div class="tl-item-where">UOW Dubai</div></div>
+        </div>
+        <div class="tl-section-label" style="margin-top:16px">// EXPERIENCE</div>
+        <div class="tl-item" onclick="showExp('exp-gitex',this)">
+          <div class="tl-dot" style="background:rgba(124,58,237,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">AI Rep · Gitex 25</div><div class="tl-item-where">Dreamloop.ai</div></div>
+        </div>
+        <div class="tl-item" onclick="showExp('exp-headgirl',this)">
+          <div class="tl-dot" style="background:rgba(245,166,35,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">Head Girl</div><div class="tl-item-where">NIMS Dubai</div></div>
+        </div>
+        <div class="tl-item" onclick="showExp('exp-mun',this)">
+          <div class="tl-dot" style="background:rgba(245,166,35,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">Director General</div><div class="tl-item-where">NIMSMUN</div></div>
+        </div>
+        <div class="tl-item" onclick="showExp('exp-chair',this)">
+          <div class="tl-dot" style="background:rgba(0,194,168,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">MUN Chairperson</div><div class="tl-item-where">Multiple Conferences</div></div>
+        </div>
+        <div class="tl-item" onclick="showExp('exp-hs',this)">
+          <div class="tl-dot" style="background:rgba(0,194,168,0.9)"></div>
+          <div class="tl-item-text"><div class="tl-item-role">High School Grad</div><div class="tl-item-where">NIMS Dubai</div></div>
+        </div>
+      </div>
+      <div class="exp-detail-panel">
+        <div class="exp-detail" id="exp-intern">
+          <div class="exp-detail-icon" style="background:rgba(245,166,35,0.9)"></div>
+          <div class="exp-detail-role">Data Science Intern</div>
+          <div class="exp-detail-where">Alamar · Dunkin' Donuts Egypt · Dubai</div>
+          <div class="exp-detail-desc">Working with operational and sales data from Dunkin' Donuts Egypt through Alamar, supporting business intelligence and reporting.</div>
+          <ul class="features-list" style="margin-top:12px">
+            <li>Analyze revenue, sales trends, and key business performance metrics</li>
+            <li>Create analytical tables and structured datasets for reporting</li>
+            <li>Transform raw data into clear insights using presentations and business reports</li>
+            <li>Support data-driven decision making by communicating findings to stakeholders</li>
+          </ul>
+        </div>
+        <div class="exp-detail" id="exp-student" style="display:none">
+          <div class="exp-detail-icon" style="background:rgba(0,194,168,0.9)"></div>
+          <div class="exp-detail-role">Computer Science Student</div>
+          <div class="exp-detail-where">UOW Dubai · AI & Big Data</div>
+          <div class="exp-detail-desc">Pursuing a Computer Science degree with a focus on AI and Big Data — building skills in programming, data analysis, and system design.</div>
+          <ul class="features-list" style="margin-top:12px">
+            <li>Developing strong skills in programming, data analysis, and system design</li>
+            <li>Working on technical projects that apply data and technology to real-world problems</li>
+            <li>Continuously learning new tools, technologies, and analytical techniques</li>
+          </ul>
+        </div>
+        <div class="exp-detail" id="exp-gitex" style="display:none">
+          <div class="exp-detail-icon" style="background:rgba(124,58,237,0.9)"></div>
+          <div class="exp-detail-role">AI Product Representative</div>
+          <div class="exp-detail-where">Dreamloop.ai · GITEX Global 2025 / Expand North Star</div>
+          <div class="exp-detail-desc">Represented Dreamloop.ai at GITEX Global 2025, engaging with CEOs, founders, and enterprise stakeholders on AI-powered platforms.</div>
+          <ul class="features-list" style="margin-top:12px">
+            <li>Delivered live demos of AI capabilities — text-to-game and text-to-app generation — to non-technical audiences</li>
+            <li>Engaged enterprise clients and explained complex AI concepts clearly</li>
+            <li>Represented the product vision and brand at one of the world's largest tech events</li>
+          </ul>
+          <div style="margin-top:18px;width:100%;height:160px;border-radius:10px;border:2px dashed rgba(124,58,237,0.4);background:rgba(124,58,237,0.03);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(124,58,237,0.5)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(124,58,237,0.5);letter-spacing:1px;">add your photo here</span>
+          </div>
+        </div>
+        <div class="exp-detail" id="exp-headgirl" style="display:none">
+          <div class="exp-detail-icon" style="background:rgba(245,166,35,0.9)"></div>
+          <div class="exp-detail-role">Head Girl</div>
+          <div class="exp-detail-where">NIMS Dubai</div>
+          <div class="exp-detail-desc">Led the student council and served as the main representative between students and school administration.</div>
+          <ul class="features-list" style="margin-top:12px">
+            <li>Led a 35+ member student council and represented the student body</li>
+            <li>Organized and coordinated major school events and programs</li>
+            <li>Managed logistics, team coordination, and communication between students and administration</li>
+            <li>Developed leadership, teamwork, and organizational skills</li>
+          </ul>
+        </div>
+        <div class="exp-detail" id="exp-mun" style="display:none">
+          <div class="exp-detail-icon" style="background:rgba(245,166,35,0.9)"></div>
+          <div class="exp-detail-role">Director General — Model United Nations</div>
+          <div class="exp-detail-where">NIMSMUN · NIMS Dubai</div>
+          <div class="exp-detail-desc">Organized and led a full 3-day MUN conference with 150+ delegates from across the UAE.</div>
+          <ul class="features-list" style="margin-top:12px">
+            <li>Managed all conference planning, logistics, and execution</li>
+            <li>Coordinated committees, organizing teams, and event operations</li>
+            <li>Organized workshops on diplomacy, public speaking, and resolution writing for delegates</li>
+            <li>Ensured smooth execution of debates, sessions, and conference activities</li>
+          </ul>
+        </div>
+        <div class="exp-detail" id="exp-chair" style="display:none">
+          <div class="exp-detail-icon" style="background:rgba(0,194,168,0.9)"></div>
+          <div class="exp-detail-role">MUN Chairperson</div>
+          <div class="exp-detail-where">Multiple MUN Conferences</div>
+          <div class="exp-detail-desc">Chaired committees at multiple Model United Nations conferences, guiding delegates through structured diplomatic discussions.</div>
+          <ul class="features-list" style="margin-top:12px">
+            <li>Moderated debates and maintained professional procedure</li>
+            <li>Ensured fair participation across all delegates</li>
+            <li>Helped delegates develop diplomacy, research, and public speaking skills</li>
+          </ul>
+        </div>
+        <div class="exp-detail" id="exp-hs" style="display:none">
+          <div class="exp-detail-icon" style="background:rgba(0,194,168,0.9)"></div>
+          <div class="exp-detail-role">High School Graduate — Science Stream</div>
+          <div class="exp-detail-where">NIMS Dubai</div>
+          <div class="exp-detail-desc">Completed high school with a focus on science and analytical subjects — building the foundation that led to pursuing Computer Science.</div>
+          <ul class="features-list" style="margin-top:12px">
+            <li>Built a strong foundation in logical thinking and problem solving</li>
+            <li>Developed early interest in technology and data</li>
+            <li>Active in extracurriculars and academic competitions</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
+</div><!-- /desktop -->
+
+<!-- TASKBAR -->
+<div id="taskbar">
+  <div class="taskbar-logo">M.OS</div>
+  <button class="taskbar-btn" id="tb-about" onclick="toggleWindow('win-about')">About</button>
+  <button class="taskbar-btn" id="tb-projects" onclick="toggleWindow('win-projects')">Projects</button>
+  <button class="taskbar-btn" id="tb-hackathons" onclick="toggleWindow('win-hackathons')">Wins</button>
+  <button class="taskbar-btn" id="tb-experience" onclick="toggleWindow('win-experience')">Experience</button>
+  <div id="clock"></div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+updateClock(); setInterval(updateClock, 1000);
+
+let zCounter = 100;
+const positions = {
+  'win-about':      {x:110, y:50},
+  'win-projects':   {x:110, y:70},
+  'win-hackathons': {x:110, y:80},
+  'win-experience': {x:110, y:80},
+};
+
+function openWindow(id) {
+  const win = document.getElementById(id);
+  if (!win) return;
+  win.style.display = 'flex';
+  if (!win.dataset.positioned) {
+    const pos = positions[id] || {x:110, y:80};
+    win.style.left = pos.x + 'px';
+    win.style.top = pos.y + 'px';
+    win.dataset.positioned = '1';
+  }
+  focusWindow(win);
+  document.querySelectorAll('.taskbar-btn').forEach(b => b.classList.remove('active'));
+  const tb = document.getElementById('tb-' + id.replace('win-', ''));
+  if (tb) tb.classList.add('active');
+}
+
+function closeWindow(id) {
+  const win = document.getElementById(id);
+  if (!win) return;
+  win.style.display = 'none';
+  win.classList.remove('focused');
+  const tb = document.getElementById('tb-' + id.replace('win-', ''));
+  if (tb) tb.classList.remove('active');
+}
+
+function toggleWindow(winId) {
+  const win = document.getElementById(winId);
+  if (!win) return;
+  if (win.style.display === 'flex') { closeWindow(winId); } else { openWindow(winId); }
+}
+
+function focusWindow(win) {
+  document.querySelectorAll('.window').forEach(w => w.classList.remove('focused'));
+  win.classList.add('focused');
+  win.style.zIndex = ++zCounter;
+}
+
+document.querySelectorAll('.window').forEach(win => {
+  win.addEventListener('mousedown', () => focusWindow(win));
+});
+
+let dragState = null;
+function startDrag(e, id) {
+  if (e.target.classList.contains('tl')) return;
+  const win = document.getElementById(id);
+  focusWindow(win);
+  const rect = win.getBoundingClientRect();
+  dragState = { win, startX: e.clientX - rect.left, startY: e.clientY - rect.top };
+  document.addEventListener('mousemove', onDrag);
+  document.addEventListener('mouseup', stopDrag);
+  e.preventDefault();
+}
+function onDrag(e) {
+  if (!dragState) return;
+  const {win, startX, startY} = dragState;
+  win.style.left = Math.max(0, e.clientX - startX) + 'px';
+  win.style.top = Math.max(0, Math.min(e.clientY - startY, window.innerHeight - 96)) + 'px';
+}
+function stopDrag() {
+  dragState = null;
+  document.removeEventListener('mousemove', onDrag);
+  document.removeEventListener('mouseup', stopDrag);
+}
+
+function showProj(id, el) {
+  document.querySelectorAll('#win-projects .exp-detail').forEach(d => d.style.display = 'none');
+  document.querySelectorAll('#win-projects .tl-item').forEach(t => t.classList.remove('active'));
+  const detail = document.getElementById(id);
+  if (detail) detail.style.display = 'block';
+  if (el) el.classList.add('active');
+}
+
+function showWin(id, el) {
+  document.querySelectorAll('#win-hackathons .exp-detail').forEach(d => d.style.display = 'none');
+  document.querySelectorAll('#win-hackathons .tl-item').forEach(t => t.classList.remove('active'));
+  const detail = document.getElementById(id);
+  if (detail) detail.style.display = 'block';
+  if (el) el.classList.add('active');
+}
+
+function showExp(id, el) {
+  document.querySelectorAll('#win-experience .exp-detail').forEach(d => d.style.display = 'none');
+  document.querySelectorAll('#win-experience .tl-item').forEach(t => t.classList.remove('active'));
+  const detail = document.getElementById(id);
+  if (detail) detail.style.display = 'block';
+  if (el) el.classList.add('active');
+}
+
+setTimeout(() => { openWindow('win-about'); }, 2200);
+</script>
+</body>
+</html>
